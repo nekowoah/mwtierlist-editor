@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TierList Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl border border-gray-700 w-full max-w-md text-center">
+            <h2 class="text-2xl font-bold mb-6 text-indigo-400">Admin Access</h2>
+            <input type="password" id="passwordInput" placeholder="Enter Password" 
+                class="w-full bg-gray-900 border border-gray-600 rounded px-4 py-3 mb-4 text-white focus:border-indigo-500 outline-none">
+            <button onclick="admin.login()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded transition-colors">
+                Unlock Editor
+            </button>
+            <p id="loginError" class="text-red-400 mt-4 text-sm hidden"></p>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden until login) -->
+    <div id="appContainer" class="hidden">
+        
+        <!-- Navigation -->
+        <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-30 shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-green-400"></i>
+                    <span class="font-bold text-xl">TierList Admin</span>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="admin.openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-bold">
+                        <i class="fa-solid fa-plus mr-2"></i> Add Hero
+                    </button>
+                    <button onclick="location.reload()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Content -->
+        <main class="max-w-7xl mx-auto px-4 py-8">
+            <div id="loading" class="text-center py-20 hidden">
+                <i class="fas fa-circle-notch fa-spin text-4xl text-indigo-500"></i>
+                <p class="mt-4 text-gray-400">Syncing with Google Sheets...</p>
+            </div>
+            
+            <div id="heroGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Heroes injected here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="heroModal" class="fixed inset-0 z-40 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="admin.closeModal()"></div>
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="bg-gray-800 border border-gray-700 rounded-lg shadow-2xl w-full max-w-lg p-6 relative">
+                    <h3 class="text-xl font-bold mb-4" id="modalTitle">Edit Hero</h3>
+                    
+                    <form id="heroForm" onsubmit="event.preventDefault(); admin.save();">
+                        <input type="hidden" id="heroId">
+                        
+                        <div class="grid grid-cols-1 gap-4 mb-4">
+                            <input type="text" id="heroName" placeholder="Hero Name" required class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none">
+                            <input type="url" id="heroImage" placeholder="Image URL" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <select id="heroClass" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none">
+                                <option>Mage</option><option>Archer</option><option>Shield Guard</option>
+                                <option>Swordman</option><option>Spearman</option><option>Cavalry</option>
+                                <option>Pegasus Knight</option><option>Priest</option>
+                            </select>
+                            <input type="text" id="heroRole" placeholder="Role" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none">
+                        </div>
+
+                        <div class="bg-gray-700/50 p-3 rounded mb-4 grid grid-cols-3 gap-2">
+                            <div><span class="text-xs text-gray-400">Early</span><select id="rankEarly" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm"></select></div>
+                            <div><span class="text-xs text-gray-400">Late</span><select id="rankLate" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm"></select></div>
+                            <div><span class="text-xs text-gray-400">Sacr</span><select id="rankSacr" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm"></select></div>
+                        </div>
+
+                        <textarea id="heroNotes" rows="3" placeholder="Notes..." class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full mb-4 outline-none"></textarea>
+
+                        <div class="flex justify-between">
+                            <button type="button" onclick="admin.deleteHero()" id="btnDelete" class="text-red-400 hover:text-red-300 text-sm hidden">Delete</button>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="admin.closeModal()" class="px-4 py-2 bg-gray-600 rounded hover:bg-gray-500">Cancel</button>
+                                <button type="submit" id="btnSave" class="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-700 font-bold">Save</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const admin = (() => {
+            // REPLACE WITH YOUR NEW ADMIN SCRIPT URL
+            const API_URL = "PASTE_YOUR_NEW_ADMIN_SCRIPT_URL_HERE";
+            const RANKS = ["SSS+", "SSS", "SSS-", "SS+", "SS", "SS-", "S+", "S", "S-", "A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F", "Unranked"];
+            
+            let authToken = "";
+            let heroes = [];
+
+            const init = () => {
+                const selects = document.querySelectorAll('.rank-select');
+                selects.forEach(s => s.innerHTML = RANKS.map(r => `<option value="${r}">${r}</option>`).join(''));
+                
+                // Check if password saved in session (optional convenience)
+                const saved = sessionStorage.getItem('mw_admin_pass');
+                if(saved) {
+                    document.getElementById('passwordInput').value = saved;
+                    login();
+                }
+            };
+
+            const login = async () => {
+                const pass = document.getElementById('passwordInput').value;
+                const err = document.getElementById('loginError');
+                const btn = document.querySelector('#loginScreen button');
+                
+                btn.innerText = "Verifying...";
+                btn.disabled = true;
+
+                try {
+                    // Try to fetch data with password
+                    const url = `${API_URL}?password=${encodeURIComponent(pass)}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+
+                    if (data.error) throw new Error(data.error);
+
+                    // Success
+                    authToken = pass;
+                    sessionStorage.setItem('mw_admin_pass', pass);
+                    heroes = data;
+                    
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('appContainer').classList.remove('hidden');
+                    render();
+
+                } catch (e) {
+                    err.innerText = "Incorrect Password or Connection Error";
+                    err.classList.remove('hidden');
+                    btn.innerText = "Unlock Editor";
+                    btn.disabled = false;
+                }
+            };
+
+            const render = () => {
+                const grid = document.getElementById('heroGrid');
+                grid.innerHTML = heroes.map(h => `
+                    <div onclick='admin.openModal(${JSON.stringify(h).replace(/'/g, "&#39;")})' 
+                         class="bg-gray-800 rounded border border-gray-700 p-4 cursor-pointer hover:border-indigo-500 transition-colors flex gap-4 items-center">
+                        <img src="${h.image}" class="w-16 h-16 rounded object-cover bg-gray-900" onerror="this.src='https://placehold.co/100?text=?'">
+                        <div>
+                            <h3 class="font-bold text-white">${h.name}</h3>
+                            <div class="text-xs text-indigo-400">${h.heroClass}</div>
+                            <div class="text-xs text-gray-500 mt-1">L: ${h.late}</div>
+                        </div>
+                    </div>
+                `).join('');
+            };
+
+            const openModal = (h = null) => {
+                const modal = document.getElementById('heroModal');
+                const f = document.getElementById;
+                
+                if (h) {
+                    document.getElementById('modalTitle').innerText = "Edit Hero";
+                    document.getElementById('heroId').value = h.id;
+                    document.getElementById('heroName').value = h.name;
+                    document.getElementById('heroImage').value = h.image;
+                    document.getElementById('heroClass').value = h.heroClass;
+                    document.getElementById('heroRole').value = h.role;
+                    document.getElementById('heroNotes').value = h.notes;
+                    document.getElementById('rankEarly').value = h.early;
+                    document.getElementById('rankLate').value = h.late;
+                    document.getElementById('rankSacr').value = h.sacrament;
+                    document.getElementById('btnDelete').classList.remove('hidden');
+                } else {
+                    document.getElementById('modalTitle').innerText = "Add Hero";
+                    document.getElementById('heroForm').reset();
+                    document.getElementById('heroId').value = "";
+                    document.getElementById('btnDelete').classList.add('hidden');
+                }
+                modal.classList.remove('hidden');
+            };
+
+            const closeModal = () => document.getElementById('heroModal').classList.add('hidden');
+
+            const save = async () => {
+                const btn = document.getElementById('btnSave');
+                const originalText = btn.innerText;
+                btn.innerText = "Saving...";
+                btn.disabled = true;
+
+                const formData = {
+                    id: document.getElementById('heroId').value,
+                    name: document.getElementById('heroName').value,
+                    image: document.getElementById('heroImage').value,
+                    heroClass: document.getElementById('heroClass').value,
+                    role: document.getElementById('heroRole').value,
+                    notes: document.getElementById('heroNotes').value,
+                    early: document.getElementById('rankEarly').value,
+                    late: document.getElementById('rankLate').value,
+                    sacrament: document.getElementById('rankSacr').value
+                };
+
+                await sendRequest({ action: "save", data: formData });
+                
+                // Refresh data locally or fetch again
+                // For simplicity, we fetch again
+                const res = await fetch(`${API_URL}?password=${authToken}`);
+                heroes = await res.json();
+                render();
+                
+                closeModal();
+                btn.innerText = originalText;
+                btn.disabled = false;
+            };
+
+            const deleteHero = async () => {
+                if(!confirm("Delete this hero?")) return;
+                const id = document.getElementById('heroId').value;
+                await sendRequest({ action: "delete", id: id });
+                
+                const res = await fetch(`${API_URL}?password=${authToken}`);
+                heroes = await res.json();
+                render();
+                closeModal();
+            };
+
+            const sendRequest = async (payload) => {
+                payload.password = authToken; // Attach password to every write request
+                try {
+                    await fetch(API_URL, {
+                        method: "POST",
+                        body: JSON.stringify(payload)
+                    });
+                } catch(e) {
+                    alert("Error saving: " + e.message);
+                }
+            };
+
+            return { init, login, openModal, closeModal, save, deleteHero };
+        })();
+
+        window.onload = admin.init;
+    </script>
+</body>
+</html>
