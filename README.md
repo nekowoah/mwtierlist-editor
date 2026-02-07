@@ -1,0 +1,1 @@
+# mwtierlist-editor
