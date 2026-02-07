@@ -77,7 +77,14 @@
                 </div>
 
                 <!-- Controls -->
-                <div class="flex gap-2 flex-wrap justify-center">
+                <div class="flex gap-2 flex-wrap justify-center items-center">
+                    
+                    <!-- Search Input -->
+                    <div class="relative">
+                        <input type="text" id="searchInput" onkeyup="admin.render()" placeholder="Search..." class="bg-gray-700 text-white rounded px-3 py-1.5 pl-8 border border-gray-600 text-sm outline-none w-32 md:w-48 focus:border-indigo-500 transition-colors">
+                        <i class="fa-solid fa-search absolute left-2.5 top-2 text-gray-400 text-xs"></i>
+                    </div>
+
                     <select id="classFilter" onchange="admin.render()" class="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 text-sm outline-none">
                         <option value="All">All Classes</option>
                         <option value="Mage">Mage</option>
@@ -97,7 +104,7 @@
                         <i class="fa-solid fa-list-ul"></i>
                     </button>
                     <button onclick="admin.openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-bold flex items-center">
-                        <i class="fa-solid fa-plus mr-1"></i> Add
+                        <i class="fa-solid fa-plus mr-1"></i> <span class="hidden sm:inline">Add</span>
                     </button>
                     <button onclick="location.reload()" class="bg-red-900/50 hover:bg-red-900 text-white px-3 py-2 rounded text-sm" title="Logout">
                         <i class="fa-solid fa-power-off"></i>
@@ -105,6 +112,13 @@
                 </div>
             </div>
         </nav>
+
+        <!-- Legend Bar -->
+        <div class="bg-gray-800/50 border-b border-gray-700 py-1 px-4 flex flex-wrap justify-center gap-4 text-[10px] sm:text-xs text-gray-400 select-none">
+            <div class="flex items-center gap-1.5"><span class="text-yellow-400"><i class="fa-solid fa-crown"></i></span> VIP Hero</div>
+            <div class="flex items-center gap-1.5"><span class="text-pink-400"><i class="fa-solid fa-star"></i></span> Limited Hero</div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 bg-red-500 rounded-full inline-block shadow-sm"></span> Updated &lt; 72h</div>
+        </div>
 
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
@@ -179,9 +193,18 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Role</label>
-                                <input type="text" id="heroRole" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white">
+                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Hero Type</label>
+                                <select id="heroType" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white">
+                                    <option value="Normal">Normal</option>
+                                    <option value="VIP">VIP</option>
+                                    <option value="Limited">Limited</option>
+                                </select>
                             </div>
+                        </div>
+                        
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Role</label>
+                            <input type="text" id="heroRole" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white mb-4">
                         </div>
 
                         <div class="bg-gray-700/50 p-3 rounded mb-4">
@@ -282,7 +305,8 @@
 
             const render = () => {
                 const container = document.getElementById('tierListContainer');
-                const filter = document.getElementById('classFilter').value;
+                const filterClass = document.getElementById('classFilter').value;
+                const filterSearch = document.getElementById('searchInput').value.toLowerCase();
                 container.innerHTML = '';
 
                 // Sort: Class then Name
@@ -293,48 +317,73 @@
                 });
 
                 RANKS.forEach(rank => {
-                    // Filter heroes by current rank mode AND class filter
+                    // Filter heroes by current rank mode, class filter AND search text
                     const heroesInRank = sortedHeroes.filter(h => {
                         const hRank = h[currentMode];
-                        const classMatch = filter === 'All' || h.heroClass === filter;
+                        const classMatch = filterClass === 'All' || h.heroClass === filterClass;
+                        const searchMatch = h.name.toLowerCase().includes(filterSearch);
+                        
                         if (rank === 'Unranked') {
-                            return (!hRank || hRank === 'Unranked' || hRank === '') && classMatch;
+                            return (!hRank || hRank === 'Unranked' || hRank === '') && classMatch && searchMatch;
                         }
-                        return hRank === rank && classMatch;
+                        return hRank === rank && classMatch && searchMatch;
                     });
 
                     if (heroesInRank.length === 0) return; // Hide empty ranks
 
                     // Create Row
                     const rowDiv = document.createElement('div');
-                    rowDiv.className = 'flex w-full bg-gray-800 border-2 border-gray-700 min-h-[120px]'; // Increased min-height
+                    rowDiv.className = 'flex w-full bg-gray-800 border-2 border-gray-700 min-h-[100px]'; // Adjusted height for smaller cards
 
                     // Label
                     const labelDiv = document.createElement('div');
                     const baseRank = rank.replace(/[+-]/g, '').toLowerCase(); 
                     const rankColorClass = rank === 'Unranked' ? 'bg-tier-unranked' : `bg-tier-${baseRank}`;
-                    labelDiv.className = `w-24 sm:w-32 flex-shrink-0 flex items-center justify-center text-center font-bold text-xl sm:text-2xl border-r-2 border-gray-700 ${rankColorClass}`;
+                    labelDiv.className = `w-20 sm:w-28 flex-shrink-0 flex items-center justify-center text-center font-bold text-xl sm:text-2xl border-r-2 border-gray-700 ${rankColorClass}`;
                     labelDiv.innerText = rank;
 
                     // Content
                     const contentDiv = document.createElement('div');
-                    contentDiv.className = 'flex flex-wrap p-3 gap-3 w-full bg-[#1a1a1a]'; // More padding and gap
+                    contentDiv.className = 'flex flex-wrap p-2 gap-2 w-full bg-[#1a1a1a]';
 
                     heroesInRank.forEach(h => {
                         const heroEl = document.createElement('div');
-                        // Reduced sizing to roughly 80x112 (mobile) and 96x128 (desktop)
-                        heroEl.className = 'hero-portrait relative w-20 h-28 sm:w-24 sm:h-32 bg-gray-700 cursor-pointer rounded-md overflow-hidden border border-gray-600 hover:border-white shadow-sm group';
+                        // Further Reduced sizing: w-16 h-24 (mobile) and w-20 h-28 (desktop)
+                        heroEl.className = 'hero-portrait relative w-16 h-24 sm:w-20 sm:h-28 bg-gray-700 cursor-pointer rounded-md overflow-hidden border border-gray-600 hover:border-white shadow-sm group';
                         heroEl.onclick = () => openModal(h);
                         
+                        // Icon Logic
+                        let iconHtml = '';
+                        if (h.heroType === 'VIP') {
+                            iconHtml = '<div class="absolute top-0 left-0 bg-black/70 text-yellow-400 text-[10px] px-1 rounded-br z-10"><i class="fa-solid fa-crown"></i></div>';
+                        } else if (h.heroType === 'Limited') {
+                            iconHtml = '<div class="absolute top-0 left-0 bg-black/70 text-pink-400 text-[10px] px-1 rounded-br z-10"><i class="fa-solid fa-star"></i></div>';
+                        }
+
+                        // Red Dot Logic (72 hours = 3 days)
+                        let dotHtml = '';
+                        if (h.lastUpdate) {
+                            const lastUpdate = new Date(h.lastUpdate);
+                            const now = new Date();
+                            const diffTime = Math.abs(now - lastUpdate);
+                            const diffHours = Math.ceil(diffTime / (1000 * 60 * 60)); 
+                            if (diffHours < 72) {
+                                dotHtml = '<div class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-black z-20 shadow-sm"></div>';
+                            }
+                        }
+
                         heroEl.innerHTML = `
+                            ${iconHtml}
+                            ${dotHtml}
                             <img src="${h.image}" onerror="this.src='https://placehold.co/100?text=?'" class="w-full h-full object-cover">
-                            <!-- Semi-transparent overlay for text, reduced opacity (bg-black/60) -->
-                            <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-[10px] sm:text-xs text-center text-white px-1 py-1 flex items-center justify-center min-h-[2rem] leading-tight">
+                            <!-- Semi-transparent overlay for text -->
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] sm:text-[10px] text-center text-white px-0.5 py-0.5 flex items-center justify-center min-h-[1.5rem] leading-tight break-words">
                                 ${h.name}
                             </div>
                             <div class="tooltip">
                                 <div class="font-bold">${h.name}</div>
                                 <div class="text-xs text-gray-300">${h.heroClass}</div>
+                                <div class="text-xs text-gray-400 italic">${h.heroType || 'Normal'}</div>
                             </div>
                         `;
                         contentDiv.appendChild(heroEl);
@@ -354,7 +403,8 @@
                     document.getElementById('heroName').value = h.name;
                     document.getElementById('heroImage').value = h.image;
                     document.getElementById('heroClass').value = h.heroClass;
-                    document.getElementById('heroRole').value = h.role;
+                    document.getElementById('heroType').value = h.heroType || 'Normal';
+                    document.getElementById('heroRole').value = h.heroRole || h.role; // Handle naming consistency
                     document.getElementById('heroNotes').value = h.notes;
                     document.getElementById('rankEarly').value = h.early;
                     document.getElementById('rankLate').value = h.late;
@@ -382,6 +432,7 @@
                     name: document.getElementById('heroName').value,
                     image: document.getElementById('heroImage').value,
                     heroClass: document.getElementById('heroClass').value,
+                    heroType: document.getElementById('heroType').value,
                     role: document.getElementById('heroRole').value,
                     notes: document.getElementById('heroNotes').value,
                     early: document.getElementById('rankEarly').value,
