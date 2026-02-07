@@ -6,6 +6,38 @@
     <title>TierList Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Rank Colors */
+        .bg-tier-sss { background-color: #ef4444; color: black; }
+        .bg-tier-ss { background-color: #f59e0b; color: black; }
+        .bg-tier-s { background-color: #f97316; color: black; }
+        .bg-tier-a { background-color: #eab308; color: black; }
+        .bg-tier-b { background-color: #84cc16; color: black; }
+        .bg-tier-c { background-color: #22c55e; color: black; }
+        .bg-tier-d { background-color: #3b82f6; color: black; }
+        .bg-tier-f { background-color: #6b7280; color: white; }
+        .bg-tier-unranked { background-color: #374151; color: white; border-color: #4b5563; }
+
+        .hero-portrait { transition: transform 0.2s; }
+        .hero-portrait:hover { transform: scale(1.05); z-index: 10; }
+        
+        .tooltip {
+          visibility: hidden;
+          position: absolute;
+          bottom: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 4px 8px;
+          background: rgba(0,0,0,0.9);
+          color: white;
+          font-size: 0.75rem;
+          border-radius: 4px;
+          white-space: nowrap;
+          z-index: 20;
+          pointer-events: none;
+        }
+        .hero-portrait:hover .tooltip { visibility: visible; }
+    </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
 
@@ -22,42 +54,96 @@
         </div>
     </div>
 
-    <!-- Main App (Hidden until login) -->
-    <div id="appContainer" class="hidden">
+    <!-- Main App -->
+    <div id="appContainer" class="hidden flex flex-col min-h-screen">
         
         <!-- Navigation -->
         <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-30 shadow-lg">
-            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-lock text-green-400"></i>
-                    <span class="font-bold text-xl">TierList Admin</span>
+            <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+                
+                <!-- Title & Mode Tabs -->
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-lock text-green-400"></i>
+                        <span class="font-bold text-xl hidden sm:inline">Admin</span>
+                    </div>
+                    
+                    <!-- Mode Switcher -->
+                    <div class="flex bg-gray-900 rounded-lg p-1">
+                        <button onclick="admin.setMode('early')" id="tab-early" class="px-3 py-1.5 rounded text-sm font-medium text-gray-400 hover:text-white transition-colors">Early Game</button>
+                        <button onclick="admin.setMode('late')" id="tab-late" class="px-3 py-1.5 rounded text-sm font-medium bg-indigo-600 text-white shadow-sm transition-colors">Late Game</button>
+                        <button onclick="admin.setMode('sacrament')" id="tab-sacrament" class="px-3 py-1.5 rounded text-sm font-medium text-gray-400 hover:text-white transition-colors">Sacrament</button>
+                    </div>
                 </div>
-                <div class="flex gap-4">
-                    <button onclick="admin.openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-bold">
-                        <i class="fa-solid fa-plus mr-2"></i> Add Hero
+
+                <!-- Controls -->
+                <div class="flex gap-2 flex-wrap justify-center">
+                    <select id="classFilter" onchange="admin.render()" class="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 text-sm outline-none">
+                        <option value="All">All Classes</option>
+                        <option value="Mage">Mage</option>
+                        <option value="Archer">Archer</option>
+                        <option value="Shield Guard">Shield Guard</option>
+                        <option value="Swordman">Swordman</option>
+                        <option value="Spearman">Spearman</option>
+                        <option value="Cavalry">Cavalry</option>
+                        <option value="Pegasus Knight">Pegasus Knight</option>
+                        <option value="Priest">Priest</option>
+                    </select>
+
+                    <button onclick="admin.syncIds()" title="Sync Rows" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm">
+                        <i class="fa-solid fa-rotate"></i>
                     </button>
-                    <button onclick="location.reload()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded">
-                        Logout
+                    <button onclick="admin.toggleChangelog()" title="View Changelog" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm">
+                        <i class="fa-solid fa-list-ul"></i>
+                    </button>
+                    <button onclick="admin.openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-bold flex items-center">
+                        <i class="fa-solid fa-plus mr-1"></i> Add
+                    </button>
+                    <button onclick="location.reload()" class="bg-red-900/50 hover:bg-red-900 text-white px-3 py-2 rounded text-sm" title="Logout">
+                        <i class="fa-solid fa-power-off"></i>
                     </button>
                 </div>
             </div>
         </nav>
 
-        <!-- Content -->
-        <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
             <div id="loading" class="text-center py-20 hidden">
                 <i class="fas fa-circle-notch fa-spin text-4xl text-indigo-500"></i>
                 <p class="mt-4 text-gray-400">Syncing with Google Sheets...</p>
             </div>
-            
-            <div id="heroGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <!-- Heroes injected here -->
+
+            <!-- Tier List Display (Rows) -->
+            <div id="tierListContainer" class="flex flex-col gap-1 select-none"></div>
+
+            <!-- Changelog Modal (Full Page) -->
+            <div id="changelogPanel" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                <div class="w-full max-w-5xl bg-gray-800 rounded-lg border border-gray-700 shadow-2xl flex flex-col h-5/6">
+                    <div class="flex justify-between items-center p-6 border-b border-gray-700 bg-gray-850 rounded-t-lg">
+                        <h3 class="font-bold text-2xl text-white"><i class="fa-solid fa-history mr-3 text-indigo-400"></i>Changelog</h3>
+                        <button onclick="admin.toggleChangelog()" class="text-gray-400 hover:text-white transition-colors bg-gray-700 hover:bg-gray-600 rounded-full w-10 h-10 flex items-center justify-center">
+                            <i class="fa-solid fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="overflow-y-auto flex-grow p-0">
+                        <table class="w-full text-left text-sm text-gray-300">
+                            <thead class="bg-gray-900 text-xs uppercase text-gray-400 sticky top-0 shadow-md">
+                                <tr>
+                                    <th class="px-6 py-4">Time</th>
+                                    <th class="px-6 py-4">Action</th>
+                                    <th class="px-6 py-4 w-1/2">Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="changelogBody" class="divide-y divide-gray-700 bg-gray-800"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
     <!-- Edit Modal -->
-    <div id="heroModal" class="fixed inset-0 z-40 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div id="heroModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="admin.closeModal()"></div>
         <div class="fixed inset-0 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
@@ -68,32 +154,55 @@
                         <input type="hidden" id="heroId">
                         
                         <div class="grid grid-cols-1 gap-4 mb-4">
-                            <input type="text" id="heroName" placeholder="Hero Name" required class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none">
-                            <input type="url" id="heroImage" placeholder="Image URL" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none">
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Name</label>
+                                <input type="text" id="heroName" required class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none text-white">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Image URL</label>
+                                <div class="relative">
+                                    <input type="url" id="heroImage" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none text-white pr-10">
+                                    <button type="button" onclick="admin.lookupImage()" title="Auto-find Image" class="absolute right-2 top-2 text-gray-400 hover:text-white mt-0.5">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4 mb-4">
-                            <select id="heroClass" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none">
-                                <option>Mage</option><option>Archer</option><option>Shield Guard</option>
-                                <option>Swordman</option><option>Spearman</option><option>Cavalry</option>
-                                <option>Pegasus Knight</option><option>Priest</option>
-                            </select>
-                            <input type="text" id="heroRole" placeholder="Role" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none">
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Class</label>
+                                <select id="heroClass" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white">
+                                    <option>Mage</option><option>Archer</option><option>Shield Guard</option>
+                                    <option>Swordman</option><option>Spearman</option><option>Cavalry</option>
+                                    <option>Pegasus Knight</option><option>Priest</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Role</label>
+                                <input type="text" id="heroRole" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white">
+                            </div>
                         </div>
 
-                        <div class="bg-gray-700/50 p-3 rounded mb-4 grid grid-cols-3 gap-2">
-                            <div><span class="text-xs text-gray-400">Early</span><select id="rankEarly" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm"></select></div>
-                            <div><span class="text-xs text-gray-400">Late</span><select id="rankLate" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm"></select></div>
-                            <div><span class="text-xs text-gray-400">Sacr</span><select id="rankSacr" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm"></select></div>
+                        <div class="bg-gray-700/50 p-3 rounded mb-4">
+                             <label class="text-xs text-indigo-400 uppercase font-bold block mb-2">Rankings</label>
+                             <div class="grid grid-cols-3 gap-2">
+                                <div><span class="text-[10px] text-gray-400 block mb-1">EARLY</span><select id="rankEarly" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm py-1"></select></div>
+                                <div><span class="text-[10px] text-gray-400 block mb-1">LATE</span><select id="rankLate" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm py-1"></select></div>
+                                <div><span class="text-[10px] text-gray-400 block mb-1">SACRAMENT</span><select id="rankSacr" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm py-1"></select></div>
+                             </div>
                         </div>
 
-                        <textarea id="heroNotes" rows="3" placeholder="Notes..." class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full mb-4 outline-none"></textarea>
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Notes</label>
+                            <textarea id="heroNotes" rows="3" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full mb-4 outline-none text-white"></textarea>
+                        </div>
 
-                        <div class="flex justify-between">
-                            <button type="button" onclick="admin.deleteHero()" id="btnDelete" class="text-red-400 hover:text-red-300 text-sm hidden">Delete</button>
-                            <div class="flex gap-2">
-                                <button type="button" onclick="admin.closeModal()" class="px-4 py-2 bg-gray-600 rounded hover:bg-gray-500">Cancel</button>
-                                <button type="submit" id="btnSave" class="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-700 font-bold">Save</button>
+                        <div class="flex justify-between pt-2 border-t border-gray-700">
+                            <button type="button" onclick="admin.deleteHero()" id="btnDelete" class="text-red-400 hover:text-red-300 text-sm hidden">Delete Hero</button>
+                            <div class="flex gap-3 ml-auto">
+                                <button type="button" onclick="admin.closeModal()" class="px-4 py-2 bg-gray-600 rounded hover:bg-gray-500 text-white">Cancel</button>
+                                <button type="submit" id="btnSave" class="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-700 font-bold text-white shadow-lg">Save Changes</button>
                             </div>
                         </div>
                     </form>
@@ -105,22 +214,39 @@
     <script>
         const admin = (() => {
             // REPLACE WITH YOUR NEW ADMIN SCRIPT URL
-            const API_URL = "PASTE_YOUR_NEW_ADMIN_SCRIPT_URL_HERE";
+            const API_URL = "https://script.google.com/macros/s/AKfycbyNcCFpZaPBG4vOFPCJjO7Wg3z6m0FcHwKR1tRRbvK9D5cPKY2OBpKYtnx-86mQnKSz/exec";
+            
             const RANKS = ["SSS+", "SSS", "SSS-", "SS+", "SS", "SS-", "S+", "S", "S-", "A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F", "Unranked"];
             
             let authToken = "";
             let heroes = [];
+            let currentMode = 'late';
 
             const init = () => {
                 const selects = document.querySelectorAll('.rank-select');
                 selects.forEach(s => s.innerHTML = RANKS.map(r => `<option value="${r}">${r}</option>`).join(''));
                 
-                // Check if password saved in session (optional convenience)
                 const saved = sessionStorage.getItem('mw_admin_pass');
                 if(saved) {
                     document.getElementById('passwordInput').value = saved;
                     login();
                 }
+            };
+
+            const setMode = (mode) => {
+                currentMode = mode;
+                // Update tabs
+                ['early', 'late', 'sacrament'].forEach(m => {
+                    const btn = document.getElementById(`tab-${m}`);
+                    if (m === mode) {
+                        btn.classList.remove('text-gray-400', 'hover:text-white');
+                        btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+                    } else {
+                        btn.classList.add('text-gray-400', 'hover:text-white');
+                        btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+                    }
+                });
+                render();
             };
 
             const login = async () => {
@@ -132,14 +258,12 @@
                 btn.disabled = true;
 
                 try {
-                    // Try to fetch data with password
                     const url = `${API_URL}?password=${encodeURIComponent(pass)}`;
                     const res = await fetch(url);
                     const data = await res.json();
 
                     if (data.error) throw new Error(data.error);
 
-                    // Success
                     authToken = pass;
                     sessionStorage.setItem('mw_admin_pass', pass);
                     heroes = data;
@@ -157,24 +281,73 @@
             };
 
             const render = () => {
-                const grid = document.getElementById('heroGrid');
-                grid.innerHTML = heroes.map(h => `
-                    <div onclick='admin.openModal(${JSON.stringify(h).replace(/'/g, "&#39;")})' 
-                         class="bg-gray-800 rounded border border-gray-700 p-4 cursor-pointer hover:border-indigo-500 transition-colors flex gap-4 items-center">
-                        <img src="${h.image}" class="w-16 h-16 rounded object-cover bg-gray-900" onerror="this.src='https://placehold.co/100?text=?'">
-                        <div>
-                            <h3 class="font-bold text-white">${h.name}</h3>
-                            <div class="text-xs text-indigo-400">${h.heroClass}</div>
-                            <div class="text-xs text-gray-500 mt-1">L: ${h.late}</div>
-                        </div>
-                    </div>
-                `).join('');
+                const container = document.getElementById('tierListContainer');
+                const filter = document.getElementById('classFilter').value;
+                container.innerHTML = '';
+
+                // Sort: Class then Name
+                const sortedHeroes = [...heroes].sort((a, b) => {
+                    if (a.heroClass < b.heroClass) return -1;
+                    if (a.heroClass > b.heroClass) return 1;
+                    return a.name.localeCompare(b.name);
+                });
+
+                RANKS.forEach(rank => {
+                    // Filter heroes by current rank mode AND class filter
+                    const heroesInRank = sortedHeroes.filter(h => {
+                        const hRank = h[currentMode];
+                        const classMatch = filter === 'All' || h.heroClass === filter;
+                        if (rank === 'Unranked') {
+                            return (!hRank || hRank === 'Unranked' || hRank === '') && classMatch;
+                        }
+                        return hRank === rank && classMatch;
+                    });
+
+                    if (heroesInRank.length === 0) return; // Hide empty ranks
+
+                    // Create Row
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'flex w-full bg-gray-800 border-2 border-gray-700 min-h-[120px]'; // Increased min-height
+
+                    // Label
+                    const labelDiv = document.createElement('div');
+                    const baseRank = rank.replace(/[+-]/g, '').toLowerCase(); 
+                    const rankColorClass = rank === 'Unranked' ? 'bg-tier-unranked' : `bg-tier-${baseRank}`;
+                    labelDiv.className = `w-24 sm:w-32 flex-shrink-0 flex items-center justify-center text-center font-bold text-xl sm:text-2xl border-r-2 border-gray-700 ${rankColorClass}`;
+                    labelDiv.innerText = rank;
+
+                    // Content
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'flex flex-wrap p-3 gap-3 w-full bg-[#1a1a1a]'; // More padding and gap
+
+                    heroesInRank.forEach(h => {
+                        const heroEl = document.createElement('div');
+                        // Reduced sizing to roughly 80x112 (mobile) and 96x128 (desktop)
+                        heroEl.className = 'hero-portrait relative w-20 h-28 sm:w-24 sm:h-32 bg-gray-700 cursor-pointer rounded-md overflow-hidden border border-gray-600 hover:border-white shadow-sm group';
+                        heroEl.onclick = () => openModal(h);
+                        
+                        heroEl.innerHTML = `
+                            <img src="${h.image}" onerror="this.src='https://placehold.co/100?text=?'" class="w-full h-full object-cover">
+                            <!-- Semi-transparent overlay for text, reduced opacity (bg-black/60) -->
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-[10px] sm:text-xs text-center text-white px-1 py-1 flex items-center justify-center min-h-[2rem] leading-tight">
+                                ${h.name}
+                            </div>
+                            <div class="tooltip">
+                                <div class="font-bold">${h.name}</div>
+                                <div class="text-xs text-gray-300">${h.heroClass}</div>
+                            </div>
+                        `;
+                        contentDiv.appendChild(heroEl);
+                    });
+
+                    rowDiv.appendChild(labelDiv);
+                    rowDiv.appendChild(contentDiv);
+                    container.appendChild(rowDiv);
+                });
             };
 
             const openModal = (h = null) => {
                 const modal = document.getElementById('heroModal');
-                const f = document.getElementById;
-                
                 if (h) {
                     document.getElementById('modalTitle').innerText = "Edit Hero";
                     document.getElementById('heroId').value = h.id;
@@ -217,13 +390,7 @@
                 };
 
                 await sendRequest({ action: "save", data: formData });
-                
-                // Refresh data locally or fetch again
-                // For simplicity, we fetch again
-                const res = await fetch(`${API_URL}?password=${authToken}`);
-                heroes = await res.json();
-                render();
-                
+                await refreshData();
                 closeModal();
                 btn.innerText = originalText;
                 btn.disabled = false;
@@ -233,26 +400,75 @@
                 if(!confirm("Delete this hero?")) return;
                 const id = document.getElementById('heroId').value;
                 await sendRequest({ action: "delete", id: id });
-                
-                const res = await fetch(`${API_URL}?password=${authToken}`);
-                heroes = await res.json();
-                render();
+                await refreshData();
                 closeModal();
             };
-
-            const sendRequest = async (payload) => {
-                payload.password = authToken; // Attach password to every write request
-                try {
-                    await fetch(API_URL, {
-                        method: "POST",
-                        body: JSON.stringify(payload)
-                    });
-                } catch(e) {
-                    alert("Error saving: " + e.message);
+            
+            const syncIds = async () => {
+                if(!confirm("Generate IDs for rows without them?")) return;
+                await sendRequest({ action: "sync_ids" });
+                alert("Sync complete.");
+                await refreshData();
+            };
+            
+            const toggleChangelog = async () => {
+                const panel = document.getElementById('changelogPanel');
+                if (panel.classList.contains('hidden')) {
+                    panel.classList.remove('hidden');
+                    document.getElementById('changelogBody').innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">Loading logs...</td></tr>';
+                    
+                    const res = await sendRequest({ action: "get_logs" });
+                    const logs = res || [];
+                    
+                    const tbody = document.getElementById('changelogBody');
+                    tbody.innerHTML = logs.length ? logs.map(l => `
+                        <tr class="hover:bg-gray-700/50">
+                            <td class="px-6 py-4 text-gray-400 whitespace-nowrap">${l.timestamp}</td>
+                            <td class="px-6 py-4 font-bold ${l.action==='CREATE'?'text-green-400':l.action==='DELETE'?'text-red-400':'text-blue-400'}">${l.action}</td>
+                            <td class="px-6 py-4 break-all">${l.details}</td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">No logs found.</td></tr>';
+                } else {
+                    panel.classList.add('hidden');
+                }
+            };
+            
+            const lookupImage = async () => {
+                const name = document.getElementById('heroName').value;
+                if(!name) return alert("Enter hero name first.");
+                
+                const icon = document.querySelector('button[title="Auto-find Image"] i');
+                icon.className = "fas fa-circle-notch fa-spin";
+                
+                const res = await sendRequest({ action: "find_image", name: name });
+                icon.className = "fa-solid fa-magnifying-glass";
+                
+                if(res && res.url) {
+                    document.getElementById('heroImage').value = res.url;
+                } else {
+                    alert("No image match found.");
                 }
             };
 
-            return { init, login, openModal, closeModal, save, deleteHero };
+            const sendRequest = async (payload) => {
+                payload.password = authToken;
+                try {
+                    const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                    const data = await res.json();
+                    if(data.error) throw new Error(data.error);
+                    return data;
+                } catch(e) {
+                    alert("Error: " + e.message);
+                }
+            };
+            
+            const refreshData = async () => {
+                const res = await fetch(`${API_URL}?password=${authToken}`);
+                heroes = await res.json();
+                render();
+            };
+
+            return { init, setMode, login, openModal, closeModal, save, deleteHero, render, syncIds, toggleChangelog, lookupImage };
         })();
 
         window.onload = admin.init;
