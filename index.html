@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Rank Colors */
+        /* Shared Styles */
         .bg-tier-sss { background-color: #ef4444; color: black; }
         .bg-tier-ss { background-color: #f59e0b; color: black; }
         .bg-tier-s { background-color: #f97316; color: black; }
@@ -18,23 +18,21 @@
         .bg-tier-f { background-color: #6b7280; color: white; }
         .bg-tier-unranked { background-color: #374151; color: white; border-color: #4b5563; }
 
+        .style-vip { border: 2px solid #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.5), inset 0 0 15px rgba(251, 191, 36, 0.3); }
+        .style-limited { border: 2px solid #f472b6; box-shadow: 0 0 10px rgba(244, 114, 182, 0.5), inset 0 0 15px rgba(244, 114, 182, 0.3); }
+        .style-normal { border: 1px solid #4b5563; }
+        
+        /* Draft Style */
+        .style-draft { border: 2px dashed #9ca3af; opacity: 0.6; filter: grayscale(0.8); }
+        .style-draft:hover { opacity: 1; filter: grayscale(0); }
+
         .hero-portrait { transition: transform 0.2s; }
         .hero-portrait:hover { transform: scale(1.05); z-index: 10; }
         
         .tooltip {
-          visibility: hidden;
-          position: absolute;
-          bottom: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          padding: 4px 8px;
-          background: rgba(0,0,0,0.9);
-          color: white;
-          font-size: 0.75rem;
-          border-radius: 4px;
-          white-space: nowrap;
-          z-index: 20;
-          pointer-events: none;
+          visibility: hidden; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+          padding: 4px 8px; background: rgba(0,0,0,0.9); color: white; font-size: 0.75rem;
+          border-radius: 4px; white-space: nowrap; z-index: 20; pointer-events: none;
         }
         .hero-portrait:hover .tooltip { visibility: visible; }
     </style>
@@ -56,35 +54,24 @@
 
     <!-- Main App -->
     <div id="appContainer" class="hidden flex flex-col min-h-screen">
-        
-        <!-- Navigation -->
         <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-30 shadow-lg">
             <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
-                
-                <!-- Title & Mode Tabs -->
                 <div class="flex items-center gap-6">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-lock text-green-400"></i>
                         <span class="font-bold text-xl hidden sm:inline">Admin</span>
                     </div>
-                    
-                    <!-- Mode Switcher -->
                     <div class="flex bg-gray-900 rounded-lg p-1">
-                        <button onclick="admin.setMode('early')" id="tab-early" class="px-3 py-1.5 rounded text-sm font-medium text-gray-400 hover:text-white transition-colors">Early Game</button>
-                        <button onclick="admin.setMode('late')" id="tab-late" class="px-3 py-1.5 rounded text-sm font-medium bg-indigo-600 text-white shadow-sm transition-colors">Late Game</button>
-                        <button onclick="admin.setMode('sacrament')" id="tab-sacrament" class="px-3 py-1.5 rounded text-sm font-medium text-gray-400 hover:text-white transition-colors">Sacrament</button>
+                        <button onclick="admin.setMode('early')" id="tab-early" class="px-3 py-1.5 rounded text-sm font-medium text-gray-400 hover:text-white transition-colors">Early</button>
+                        <button onclick="admin.setMode('late')" id="tab-late" class="px-3 py-1.5 rounded text-sm font-medium bg-indigo-600 text-white shadow-sm transition-colors">Late</button>
+                        <button onclick="admin.setMode('sacrament')" id="tab-sacrament" class="px-3 py-1.5 rounded text-sm font-medium text-gray-400 hover:text-white transition-colors">Sacr</button>
                     </div>
                 </div>
-
-                <!-- Controls -->
                 <div class="flex gap-2 flex-wrap justify-center items-center">
-                    
-                    <!-- Search Input -->
                     <div class="relative">
                         <input type="text" id="searchInput" onkeyup="admin.render()" placeholder="Search..." class="bg-gray-700 text-white rounded px-3 py-1.5 pl-8 border border-gray-600 text-sm outline-none w-32 md:w-48 focus:border-indigo-500 transition-colors">
                         <i class="fa-solid fa-search absolute left-2.5 top-2 text-gray-400 text-xs"></i>
                     </div>
-
                     <select id="classFilter" onchange="admin.render()" class="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 text-sm outline-none">
                         <option value="All">All Classes</option>
                         <option value="Mage">Mage</option>
@@ -96,61 +83,36 @@
                         <option value="Pegasus Knight">Pegasus Knight</option>
                         <option value="Priest">Priest</option>
                     </select>
-
-                    <button onclick="admin.syncIds()" title="Sync Rows" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm">
-                        <i class="fa-solid fa-rotate"></i>
-                    </button>
-                    <button onclick="admin.toggleChangelog()" title="View Changelog" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm">
-                        <i class="fa-solid fa-list-ul"></i>
-                    </button>
-                    <button onclick="admin.openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-bold flex items-center">
-                        <i class="fa-solid fa-plus mr-1"></i> <span class="hidden sm:inline">Add</span>
-                    </button>
-                    <button onclick="location.reload()" class="bg-red-900/50 hover:bg-red-900 text-white px-3 py-2 rounded text-sm" title="Logout">
-                        <i class="fa-solid fa-power-off"></i>
-                    </button>
+                    <button onclick="admin.syncIds()" title="Sync" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm"><i class="fa-solid fa-rotate"></i></button>
+                    <button onclick="admin.toggleChangelog()" title="Logs" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm"><i class="fa-solid fa-list-ul"></i></button>
+                    <button onclick="admin.openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-bold flex items-center"><i class="fa-solid fa-plus mr-1"></i> <span class="hidden sm:inline">Add</span></button>
+                    <button onclick="location.reload()" class="bg-red-900/50 hover:bg-red-900 text-white px-3 py-2 rounded text-sm" title="Logout"><i class="fa-solid fa-power-off"></i></button>
                 </div>
             </div>
         </nav>
 
-        <!-- Legend Bar -->
         <div class="bg-gray-800/50 border-b border-gray-700 py-1 px-4 flex flex-wrap justify-center gap-4 text-[10px] sm:text-xs text-gray-400 select-none">
-            <div class="flex items-center gap-1.5"><span class="text-yellow-400"><i class="fa-solid fa-crown"></i></span> VIP Hero</div>
-            <div class="flex items-center gap-1.5"><span class="text-pink-400"><i class="fa-solid fa-star"></i></span> Limited Hero</div>
-            <div class="flex items-center gap-1.5"><span class="w-2 h-2 bg-red-500 rounded-full inline-block shadow-sm"></span> Updated &lt; 72h</div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 border border-yellow-400 shadow-sm rounded-sm"></span> VIP</div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 border border-pink-400 shadow-sm rounded-sm"></span> Limited</div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 border border-dashed border-gray-400 rounded-sm"></span> Draft Mode</div>
+            <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-red-500 rounded-full shadow-sm"></span> Updated</div>
         </div>
 
-        <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
             <div id="loading" class="text-center py-20 hidden">
                 <i class="fas fa-circle-notch fa-spin text-4xl text-indigo-500"></i>
-                <p class="mt-4 text-gray-400">Syncing with Google Sheets...</p>
+                <p class="mt-4 text-gray-400">Syncing...</p>
             </div>
-
-            <!-- Tier List Display (Rows) -->
             <div id="tierListContainer" class="flex flex-col gap-1 select-none"></div>
-
-            <!-- Changelog Modal (Full Page) -->
+            
+            <!-- Changelog Panel -->
             <div id="changelogPanel" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                 <div class="w-full max-w-5xl bg-gray-800 rounded-lg border border-gray-700 shadow-2xl flex flex-col h-5/6">
                     <div class="flex justify-between items-center p-6 border-b border-gray-700 bg-gray-850 rounded-t-lg">
                         <h3 class="font-bold text-2xl text-white"><i class="fa-solid fa-history mr-3 text-indigo-400"></i>Changelog</h3>
-                        <button onclick="admin.toggleChangelog()" class="text-gray-400 hover:text-white transition-colors bg-gray-700 hover:bg-gray-600 rounded-full w-10 h-10 flex items-center justify-center">
-                            <i class="fa-solid fa-times text-lg"></i>
-                        </button>
+                        <button onclick="admin.toggleChangelog()" class="text-gray-400 hover:text-white transition-colors bg-gray-700 hover:bg-gray-600 rounded-full w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-times text-lg"></i></button>
                     </div>
-                    <div class="overflow-y-auto flex-grow p-0">
-                        <table class="w-full text-left text-sm text-gray-300">
-                            <thead class="bg-gray-900 text-xs uppercase text-gray-400 sticky top-0 shadow-md">
-                                <tr>
-                                    <th class="px-6 py-4">Time</th>
-                                    <th class="px-6 py-4">Action</th>
-                                    <th class="px-6 py-4 w-1/2">Details</th>
-                                </tr>
-                            </thead>
-                            <tbody id="changelogBody" class="divide-y divide-gray-700 bg-gray-800"></tbody>
-                        </table>
-                    </div>
+                    <div id="changelogBody" class="overflow-y-auto flex-grow p-6 space-y-4 text-sm text-gray-300"></div>
                 </div>
             </div>
         </main>
@@ -163,64 +125,38 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="bg-gray-800 border border-gray-700 rounded-lg shadow-2xl w-full max-w-lg p-6 relative">
                     <h3 class="text-xl font-bold mb-4" id="modalTitle">Edit Hero</h3>
-                    
                     <form id="heroForm" onsubmit="event.preventDefault(); admin.save();">
                         <input type="hidden" id="heroId">
                         
+                        <!-- Top Row -->
                         <div class="grid grid-cols-1 gap-4 mb-4">
-                            <div>
-                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Name</label>
-                                <input type="text" id="heroName" required class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none text-white">
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Image URL</label>
-                                <div class="relative">
-                                    <input type="url" id="heroImage" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none text-white pr-10">
-                                    <button type="button" onclick="admin.lookupImage()" title="Auto-find Image" class="absolute right-2 top-2 text-gray-400 hover:text-white mt-0.5">
-                                        <i class="fa-solid fa-magnifying-glass"></i>
-                                    </button>
-                                </div>
-                            </div>
+                            <div><label class="text-xs text-gray-400 uppercase font-bold block mb-1">Name</label><input type="text" id="heroName" required class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none text-white"></div>
+                            <div><label class="text-xs text-gray-400 uppercase font-bold block mb-1">Image URL</label><div class="relative"><input type="url" id="heroImage" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none text-white pr-10"><button type="button" onclick="admin.lookupImage()" title="Auto-find Image" class="absolute right-2 top-2 text-gray-400 hover:text-white mt-0.5"><i class="fa-solid fa-magnifying-glass"></i></button></div></div>
                         </div>
 
+                        <!-- Config Row 1 -->
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div><label class="text-xs text-gray-400 uppercase font-bold block mb-1">Class</label><select id="heroClass" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white"><option>Mage</option><option>Archer</option><option>Shield Guard</option><option>Swordman</option><option>Spearman</option><option>Cavalry</option><option>Pegasus Knight</option><option>Priest</option></select></div>
+                            <div><label class="text-xs text-gray-400 uppercase font-bold block mb-1">Hero Type</label><select id="heroType" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white"><option value="Normal">Normal</option><option value="VIP">VIP</option><option value="Limited">Limited</option></select></div>
+                        </div>
+
+                        <!-- Config Row 2 (Status & Role) -->
                         <div class="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Class</label>
-                                <select id="heroClass" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white">
-                                    <option>Mage</option><option>Archer</option><option>Shield Guard</option>
-                                    <option>Swordman</option><option>Spearman</option><option>Cavalry</option>
-                                    <option>Pegasus Knight</option><option>Priest</option>
+                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Status</label>
+                                <select id="heroStatus" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white focus:border-indigo-500">
+                                    <option value="Published">Published</option>
+                                    <option value="Draft">Draft Mode</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Hero Type</label>
-                                <select id="heroType" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white">
-                                    <option value="Normal">Normal</option>
-                                    <option value="VIP">VIP</option>
-                                    <option value="Limited">Limited</option>
-                                </select>
+                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Role</label>
+                                <input type="text" id="heroRole" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white">
                             </div>
                         </div>
-                        
-                        <div>
-                            <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Role</label>
-                            <input type="text" id="heroRole" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full outline-none text-white mb-4">
-                        </div>
 
-                        <div class="bg-gray-700/50 p-3 rounded mb-4">
-                             <label class="text-xs text-indigo-400 uppercase font-bold block mb-2">Rankings</label>
-                             <div class="grid grid-cols-3 gap-2">
-                                <div><span class="text-[10px] text-gray-400 block mb-1">EARLY</span><select id="rankEarly" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm py-1"></select></div>
-                                <div><span class="text-[10px] text-gray-400 block mb-1">LATE</span><select id="rankLate" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm py-1"></select></div>
-                                <div><span class="text-[10px] text-gray-400 block mb-1">SACRAMENT</span><select id="rankSacr" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm py-1"></select></div>
-                             </div>
-                        </div>
-
-                        <div>
-                            <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Notes</label>
-                            <textarea id="heroNotes" rows="3" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full mb-4 outline-none text-white"></textarea>
-                        </div>
-
+                        <div class="bg-gray-700/50 p-3 rounded mb-4"><label class="text-xs text-indigo-400 uppercase font-bold block mb-2">Rankings</label><div class="grid grid-cols-3 gap-2"><div><span class="text-[10px] text-gray-400 block mb-1">EARLY</span><select id="rankEarly" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm py-1"></select></div><div><span class="text-[10px] text-gray-400 block mb-1">LATE</span><select id="rankLate" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm py-1"></select></div><div><span class="text-[10px] text-gray-400 block mb-1">SACRAMENT</span><select id="rankSacr" class="rank-select bg-gray-900 w-full rounded border border-gray-600 text-sm py-1"></select></div></div></div>
+                        <div><label class="text-xs text-gray-400 uppercase font-bold block mb-1">Notes</label><textarea id="heroNotes" rows="3" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full mb-4 outline-none text-white"></textarea></div>
                         <div class="flex justify-between pt-2 border-t border-gray-700">
                             <button type="button" onclick="admin.deleteHero()" id="btnDelete" class="text-red-400 hover:text-red-300 text-sm hidden">Delete Hero</button>
                             <div class="flex gap-3 ml-auto">
@@ -236,9 +172,7 @@
 
     <script>
         const admin = (() => {
-            // REPLACE WITH YOUR NEW ADMIN SCRIPT URL
             const API_URL = "https://script.google.com/macros/s/AKfycbyNcCFpZaPBG4vOFPCJjO7Wg3z6m0FcHwKR1tRRbvK9D5cPKY2OBpKYtnx-86mQnKSz/exec";
-            
             const RANKS = ["SSS+", "SSS", "SSS-", "SS+", "SS", "SS-", "S+", "S", "S-", "A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F", "Unranked"];
             
             let authToken = "";
@@ -246,60 +180,36 @@
             let currentMode = 'late';
 
             const init = () => {
-                const selects = document.querySelectorAll('.rank-select');
-                selects.forEach(s => s.innerHTML = RANKS.map(r => `<option value="${r}">${r}</option>`).join(''));
-                
+                document.querySelectorAll('.rank-select').forEach(s => s.innerHTML = RANKS.map(r => `<option value="${r}">${r}</option>`).join(''));
                 const saved = sessionStorage.getItem('mw_admin_pass');
-                if(saved) {
-                    document.getElementById('passwordInput').value = saved;
-                    login();
-                }
+                if(saved) { document.getElementById('passwordInput').value = saved; login(); }
             };
 
             const setMode = (mode) => {
                 currentMode = mode;
-                // Update tabs
                 ['early', 'late', 'sacrament'].forEach(m => {
                     const btn = document.getElementById(`tab-${m}`);
-                    if (m === mode) {
-                        btn.classList.remove('text-gray-400', 'hover:text-white');
-                        btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
-                    } else {
-                        btn.classList.add('text-gray-400', 'hover:text-white');
-                        btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
-                    }
+                    btn.className = m === mode ? 'px-3 py-1.5 rounded text-sm font-medium bg-indigo-600 text-white shadow-sm transition-colors' : 'px-3 py-1.5 rounded text-sm font-medium text-gray-400 hover:text-white transition-colors';
                 });
                 render();
             };
 
             const login = async () => {
                 const pass = document.getElementById('passwordInput').value;
-                const err = document.getElementById('loginError');
                 const btn = document.querySelector('#loginScreen button');
-                
-                btn.innerText = "Verifying...";
-                btn.disabled = true;
-
+                btn.innerText = "Verifying..."; btn.disabled = true;
                 try {
-                    const url = `${API_URL}?password=${encodeURIComponent(pass)}`;
-                    const res = await fetch(url);
+                    const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "check_auth", password: pass }) });
                     const data = await res.json();
-
                     if (data.error) throw new Error(data.error);
-
-                    authToken = pass;
-                    sessionStorage.setItem('mw_admin_pass', pass);
-                    heroes = data;
-                    
+                    authToken = pass; sessionStorage.setItem('mw_admin_pass', pass);
+                    await refreshData();
                     document.getElementById('loginScreen').classList.add('hidden');
                     document.getElementById('appContainer').classList.remove('hidden');
-                    render();
-
                 } catch (e) {
-                    err.innerText = "Incorrect Password or Connection Error";
-                    err.classList.remove('hidden');
-                    btn.innerText = "Unlock Editor";
-                    btn.disabled = false;
+                    document.getElementById('loginError').innerText = "Incorrect Password";
+                    document.getElementById('loginError').classList.remove('hidden');
+                    btn.innerText = "Unlock Editor"; btn.disabled = false;
                 }
             };
 
@@ -309,7 +219,6 @@
                 const filterSearch = document.getElementById('searchInput').value.toLowerCase();
                 container.innerHTML = '';
 
-                // Sort: Class then Name
                 const sortedHeroes = [...heroes].sort((a, b) => {
                     if (a.heroClass < b.heroClass) return -1;
                     if (a.heroClass > b.heroClass) return 1;
@@ -317,80 +226,59 @@
                 });
 
                 RANKS.forEach(rank => {
-                    // Filter heroes by current rank mode, class filter AND search text
                     const heroesInRank = sortedHeroes.filter(h => {
                         const hRank = h[currentMode];
                         const classMatch = filterClass === 'All' || h.heroClass === filterClass;
                         const searchMatch = h.name.toLowerCase().includes(filterSearch);
-                        
-                        if (rank === 'Unranked') {
-                            return (!hRank || hRank === 'Unranked' || hRank === '') && classMatch && searchMatch;
-                        }
+                        if (rank === 'Unranked') return (!hRank || hRank === 'Unranked' || hRank === '') && classMatch && searchMatch;
                         return hRank === rank && classMatch && searchMatch;
                     });
 
-                    if (heroesInRank.length === 0) return; // Hide empty ranks
+                    if (heroesInRank.length === 0) return;
 
-                    // Create Row
                     const rowDiv = document.createElement('div');
-                    rowDiv.className = 'flex w-full bg-gray-800 border-2 border-gray-700 min-h-[100px]'; // Adjusted height for smaller cards
-
-                    // Label
-                    const labelDiv = document.createElement('div');
+                    rowDiv.className = 'flex w-full bg-gray-800 border-2 border-gray-700 min-h-[100px]';
+                    
                     const baseRank = rank.replace(/[+-]/g, '').toLowerCase(); 
                     const rankColorClass = rank === 'Unranked' ? 'bg-tier-unranked' : `bg-tier-${baseRank}`;
-                    labelDiv.className = `w-20 sm:w-28 flex-shrink-0 flex items-center justify-center text-center font-bold text-xl sm:text-2xl border-r-2 border-gray-700 ${rankColorClass}`;
-                    labelDiv.innerText = rank;
-
-                    // Content
-                    const contentDiv = document.createElement('div');
-                    contentDiv.className = 'flex flex-wrap p-2 gap-2 w-full bg-[#1a1a1a]';
+                    
+                    rowDiv.innerHTML = `
+                        <div class="w-20 sm:w-28 flex-shrink-0 flex items-center justify-center text-center font-bold text-xl sm:text-2xl border-r-2 border-gray-700 ${rankColorClass}">${rank}</div>
+                        <div class="flex flex-wrap p-2 gap-2 w-full bg-[#1a1a1a]" id="row-${rank}"></div>
+                    `;
+                    const contentDiv = rowDiv.querySelector(`#row-${rank}`);
 
                     heroesInRank.forEach(h => {
                         const heroEl = document.createElement('div');
-                        // Further Reduced sizing: w-16 h-24 (mobile) and w-20 h-28 (desktop)
-                        heroEl.className = 'hero-portrait relative w-16 h-24 sm:w-20 sm:h-28 bg-gray-700 cursor-pointer rounded-md overflow-hidden border border-gray-600 hover:border-white shadow-sm group';
+                        
+                        let styleClass = 'style-normal';
+                        if (h.status === 'Draft') styleClass = 'style-draft';
+                        else if (h.heroType === 'VIP') styleClass = 'style-vip';
+                        else if (h.heroType === 'Limited') styleClass = 'style-limited';
+
+                        heroEl.className = `hero-portrait relative w-16 h-24 sm:w-20 sm:h-28 bg-gray-700 cursor-pointer rounded-md overflow-hidden ${styleClass} shadow-sm group`;
                         heroEl.onclick = () => openModal(h);
                         
-                        // Icon Logic
                         let iconHtml = '';
-                        if (h.heroType === 'VIP') {
-                            iconHtml = '<div class="absolute top-0 left-0 bg-black/70 text-yellow-400 text-[10px] px-1 rounded-br z-10"><i class="fa-solid fa-crown"></i></div>';
-                        } else if (h.heroType === 'Limited') {
-                            iconHtml = '<div class="absolute top-0 left-0 bg-black/70 text-pink-400 text-[10px] px-1 rounded-br z-10"><i class="fa-solid fa-star"></i></div>';
-                        }
+                        if (h.heroType === 'VIP') iconHtml = '<div class="absolute top-0 left-0 bg-black/70 text-yellow-400 text-[10px] px-1 rounded-br z-10"><i class="fa-solid fa-crown"></i></div>';
+                        else if (h.heroType === 'Limited') iconHtml = '<div class="absolute top-0 left-0 bg-black/70 text-pink-400 text-[10px] px-1 rounded-br z-10"><i class="fa-solid fa-star"></i></div>';
+                        
+                        if (h.status === 'Draft') iconHtml += '<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800/90 px-1 rounded text-[8px] text-gray-300 font-bold tracking-widest border border-gray-500">DRAFT</div>';
 
-                        // Red Dot Logic (72 hours = 3 days)
                         let dotHtml = '';
                         if (h.lastUpdate) {
-                            const lastUpdate = new Date(h.lastUpdate);
-                            const now = new Date();
-                            const diffTime = Math.abs(now - lastUpdate);
-                            const diffHours = Math.ceil(diffTime / (1000 * 60 * 60)); 
-                            if (diffHours < 72) {
-                                dotHtml = '<div class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-black z-20 shadow-sm"></div>';
-                            }
+                            const diffHours = Math.ceil(Math.abs(new Date() - new Date(h.lastUpdate)) / (36e5)); 
+                            if (diffHours < 72) dotHtml = '<div class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-black z-20 shadow-sm"></div>';
                         }
 
                         heroEl.innerHTML = `
-                            ${iconHtml}
-                            ${dotHtml}
+                            ${iconHtml}${dotHtml}
                             <img src="${h.image}" onerror="this.src='https://placehold.co/100?text=?'" class="w-full h-full object-cover">
-                            <!-- Semi-transparent overlay for text -->
-                            <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] sm:text-[10px] text-center text-white px-0.5 py-0.5 flex items-center justify-center min-h-[1.5rem] leading-tight break-words">
-                                ${h.name}
-                            </div>
-                            <div class="tooltip">
-                                <div class="font-bold">${h.name}</div>
-                                <div class="text-xs text-gray-300">${h.heroClass}</div>
-                                <div class="text-xs text-gray-400 italic">${h.heroType || 'Normal'}</div>
-                            </div>
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] sm:text-[10px] text-center text-white px-0.5 py-0.5 flex items-center justify-center min-h-[1.5rem] leading-tight break-words">${h.name}</div>
+                            <div class="tooltip"><div class="font-bold">${h.name}</div><div class="text-xs text-gray-300">${h.heroClass}</div><div class="text-xs text-gray-400 italic">${h.heroType}</div></div>
                         `;
                         contentDiv.appendChild(heroEl);
                     });
-
-                    rowDiv.appendChild(labelDiv);
-                    rowDiv.appendChild(contentDiv);
                     container.appendChild(rowDiv);
                 });
             };
@@ -404,7 +292,8 @@
                     document.getElementById('heroImage').value = h.image;
                     document.getElementById('heroClass').value = h.heroClass;
                     document.getElementById('heroType').value = h.heroType || 'Normal';
-                    document.getElementById('heroRole').value = h.heroRole || h.role; // Handle naming consistency
+                    document.getElementById('heroStatus').value = h.status || 'Published';
+                    document.getElementById('heroRole').value = h.heroRole || h.role;
                     document.getElementById('heroNotes').value = h.notes;
                     document.getElementById('rankEarly').value = h.early;
                     document.getElementById('rankLate').value = h.late;
@@ -423,62 +312,70 @@
 
             const save = async () => {
                 const btn = document.getElementById('btnSave');
-                const originalText = btn.innerText;
-                btn.innerText = "Saving...";
-                btn.disabled = true;
-
+                btn.innerText = "Saving..."; btn.disabled = true;
                 const formData = {
                     id: document.getElementById('heroId').value,
                     name: document.getElementById('heroName').value,
                     image: document.getElementById('heroImage').value,
                     heroClass: document.getElementById('heroClass').value,
                     heroType: document.getElementById('heroType').value,
+                    status: document.getElementById('heroStatus').value,
                     role: document.getElementById('heroRole').value,
                     notes: document.getElementById('heroNotes').value,
                     early: document.getElementById('rankEarly').value,
                     late: document.getElementById('rankLate').value,
                     sacrament: document.getElementById('rankSacr').value
                 };
-
                 await sendRequest({ action: "save", data: formData });
                 await refreshData();
                 closeModal();
-                btn.innerText = originalText;
-                btn.disabled = false;
+                btn.innerText = "Save Changes"; btn.disabled = false;
             };
 
             const deleteHero = async () => {
                 if(!confirm("Delete this hero?")) return;
-                const id = document.getElementById('heroId').value;
-                await sendRequest({ action: "delete", id: id });
-                await refreshData();
-                closeModal();
+                await sendRequest({ action: "delete", id: document.getElementById('heroId').value });
+                await refreshData(); closeModal();
             };
             
             const syncIds = async () => {
-                if(!confirm("Generate IDs for rows without them?")) return;
+                if(!confirm("Generate IDs?")) return;
                 await sendRequest({ action: "sync_ids" });
-                alert("Sync complete.");
-                await refreshData();
+                alert("Complete."); await refreshData();
             };
             
             const toggleChangelog = async () => {
                 const panel = document.getElementById('changelogPanel');
                 if (panel.classList.contains('hidden')) {
                     panel.classList.remove('hidden');
-                    document.getElementById('changelogBody').innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">Loading logs...</td></tr>';
+                    const body = document.getElementById('changelogBody');
+                    body.innerHTML = '<div class="text-center py-10"><i class="fas fa-circle-notch fa-spin"></i></div>';
                     
                     const res = await sendRequest({ action: "get_logs" });
                     const logs = res || [];
                     
-                    const tbody = document.getElementById('changelogBody');
-                    tbody.innerHTML = logs.length ? logs.map(l => `
-                        <tr class="hover:bg-gray-700/50">
-                            <td class="px-6 py-4 text-gray-400 whitespace-nowrap">${l.timestamp}</td>
-                            <td class="px-6 py-4 font-bold ${l.action==='CREATE'?'text-green-400':l.action==='DELETE'?'text-red-400':'text-blue-400'}">${l.action}</td>
-                            <td class="px-6 py-4 break-all">${l.details}</td>
-                        </tr>
-                    `).join('') : '<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">No logs found.</td></tr>';
+                    // Group by Date
+                    const grouped = {};
+                    logs.forEach(log => {
+                        let d = "Unknown";
+                        try { d = new Date(log.timestamp).toLocaleDateString(undefined, {month:'short', day:'numeric'}); } catch(e) { d = log.timestamp; }
+                        if (!grouped[d]) grouped[d] = [];
+                        grouped[d].push(log);
+                    });
+
+                    body.innerHTML = Object.keys(grouped).map(date => `
+                        <div class="mb-4">
+                            <h4 class="text-indigo-400 font-bold border-b border-gray-700 pb-1 mb-2 sticky top-0 bg-gray-800">${date}</h4>
+                            <div class="space-y-2">
+                                ${grouped[date].map(l => `
+                                    <div class="bg-gray-700/30 p-2 rounded text-xs">
+                                        <span class="font-bold ${l.action==='CREATE'?'text-green-400':l.action==='DELETE'?'text-red-400':'text-blue-400'} mr-2">${l.action}</span>
+                                        <span class="text-gray-300">${l.details}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('') || '<div class="text-center text-gray-500">No logs.</div>';
                 } else {
                     panel.classList.add('hidden');
                 }
@@ -486,19 +383,13 @@
             
             const lookupImage = async () => {
                 const name = document.getElementById('heroName').value;
-                if(!name) return alert("Enter hero name first.");
-                
+                if(!name) return alert("Enter name.");
                 const icon = document.querySelector('button[title="Auto-find Image"] i');
                 icon.className = "fas fa-circle-notch fa-spin";
-                
                 const res = await sendRequest({ action: "find_image", name: name });
                 icon.className = "fa-solid fa-magnifying-glass";
-                
-                if(res && res.url) {
-                    document.getElementById('heroImage').value = res.url;
-                } else {
-                    alert("No image match found.");
-                }
+                if(res && res.url) document.getElementById('heroImage').value = res.url;
+                else alert("No match.");
             };
 
             const sendRequest = async (payload) => {
@@ -508,14 +399,13 @@
                     const data = await res.json();
                     if(data.error) throw new Error(data.error);
                     return data;
-                } catch(e) {
-                    alert("Error: " + e.message);
-                }
+                } catch(e) { alert("Error: " + e.message); }
             };
             
             const refreshData = async () => {
-                const res = await fetch(`${API_URL}?password=${authToken}`);
-                heroes = await res.json();
+                // Must use POST with password to get drafts
+                const res = await sendRequest({ action: "get_all_data" });
+                heroes = res || [];
                 render();
             };
 
