@@ -21,15 +21,20 @@
 
         /* Top Border Types with Glow */
         .border-t-vip { 
-            border-top: 4px solid #fbbf24;
+            border-top: 2px solid #fbbf24;
             box-shadow: 0 -2px 8px rgba(251, 191, 36, 0.6);
         }
         .border-t-limited { 
-            border-top: 4px solid #f472b6;
-            box-shadow: 0 -2px 8px rgba(244, 114, 182, 0.6);
+            border-top: 2px solid #e879f9;
+            box-shadow: 0 -2px 8px rgba(232, 121, 249, 0.6);
+        }
+        .border-t-basic {
+            border-top: 2px solid #22c55e;
+            box-shadow: 0 -2px 8px rgba(34, 197, 94, 0.6);
         }
         .border-t-normal {
-            border-top: 0px solid transparent;
+            border-top: 2px solid #6b7280;
+            box-shadow: none;
         }
 
         .hero-portrait { transition: transform 0.2s, box-shadow 0.2s; }
@@ -45,6 +50,12 @@
         .class-btn-active { border-color: #eab308; background-color: rgba(234, 179, 8, 0.2); color: #eab308; }
         .class-btn-inactive { border-color: #4b5563; opacity: 0.7; }
         .class-btn-inactive:hover { opacity: 1; border-color: #9ca3af; }
+
+        /* Custom Checkbox Style */
+        .custom-checkbox:checked {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans flex flex-col">
@@ -55,7 +66,7 @@
             <h2 class="text-2xl font-bold mb-6 text-indigo-400">Admin Access</h2>
             <input type="password" id="passwordInput" placeholder="Enter Password" 
                 class="w-full bg-gray-900 border border-gray-600 rounded px-4 py-3 mb-4 text-white focus:border-indigo-500 outline-none transition-colors">
-            <button onclick="admin.login()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded transition-colors shadow-lg">
+            <button onclick="window.admin.login()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded transition-colors shadow-lg">
                 Unlock Editor
             </button>
             <p id="loginError" class="text-red-400 mt-4 text-sm hidden"></p>
@@ -78,26 +89,26 @@
                     
                     <!-- Mode Switcher -->
                     <div class="flex bg-gray-900 rounded-lg p-1">
-                        <button onclick="admin.setMode('early')" id="tab-early" class="px-4 py-1.5 rounded text-sm font-bold text-gray-400 hover:text-white transition-colors">Early</button>
-                        <button onclick="admin.setMode('late')" id="tab-late" class="px-4 py-1.5 rounded text-sm font-bold bg-indigo-600 text-white shadow-lg transition-colors">Late</button>
-                        <button onclick="admin.setMode('sacrament')" id="tab-sacrament" class="px-4 py-1.5 rounded text-sm font-bold text-gray-400 hover:text-white transition-colors">Sacrament</button>
+                        <button onclick="window.admin.setMode('early')" id="tab-early" class="px-4 py-1.5 rounded text-sm font-bold text-gray-400 hover:text-white transition-colors">Early Game</button>
+                        <button onclick="window.admin.setMode('late')" id="tab-late" class="px-3 py-1.5 rounded text-sm font-medium bg-indigo-600 text-white shadow-sm transition-colors">Late Game</button>
+                        <button onclick="window.admin.setMode('sacrament')" id="tab-sacrament" class="px-3 py-1.5 rounded text-sm font-medium text-gray-400 hover:text-white transition-colors">Sacrament</button>
                     </div>
                 </div>
 
                 <!-- Controls (Right Side) -->
                 <div class="flex gap-4 items-center w-full md:w-auto">
                     <div class="relative group flex-grow md:flex-grow-0">
-                        <input type="text" id="searchInput" onkeyup="admin.render()" placeholder="Search..." 
+                        <input type="text" id="searchInput" onkeyup="window.admin.render()" placeholder="Search..." 
                             class="bg-gray-900/50 text-white rounded-full px-4 py-2 pl-10 border border-gray-600 text-sm outline-none w-full md:w-64 focus:border-yellow-500 focus:bg-gray-900 transition-all">
                         <i class="fa-solid fa-search absolute left-3.5 top-2.5 text-gray-400 text-xs group-focus-within:text-yellow-500"></i>
                     </div>
                     
-                    <button onclick="admin.toggleChangelog()" class="text-gray-400 hover:text-white transition-colors" title="View Changelog">
+                    <button onclick="window.admin.toggleChangelog()" class="text-gray-400 hover:text-white transition-colors" title="View Changelog">
                         <i class="fa-solid fa-clock-rotate-left text-lg"></i>
                     </button>
 
-                    <!-- Add Button (Replaces Discord) -->
-                    <button onclick="admin.openModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-full transition-colors w-10 h-10 flex items-center justify-center shadow-lg" title="Add Hero">
+                    <!-- Add Button -->
+                    <button onclick="window.admin.openModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-full transition-colors w-10 h-10 flex items-center justify-center shadow-lg" title="Add Hero">
                         <i class="fa-solid fa-plus text-lg"></i>
                     </button>
                 </div>
@@ -105,7 +116,8 @@
         </nav>
 
         <!-- Info & Filter Section -->
-        <div class="bg-gray-800/80 border-b border-gray-700 backdrop-blur-sm">
+        <!-- Added z-30 to ensure dropdowns inside overlap main content -->
+        <div class="bg-gray-800/80 border-b border-gray-700 backdrop-blur-sm relative z-30">
             <div class="max-w-7xl mx-auto px-4 py-4 space-y-4">
                 
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -114,25 +126,52 @@
                         <p id="listDesc" class="text-gray-300 text-sm leading-relaxed max-w-4xl"></p>
                     </div>
                     
+                    <!-- Updated Legend -->
                     <div class="flex flex-wrap gap-4 text-xs text-gray-400 select-none bg-gray-900/50 px-4 py-2 rounded border border-gray-700">
                         <div class="flex items-center gap-2"><span class="w-4 h-1 bg-yellow-400 shadow-[0_-2px_6px_rgba(250,204,21,0.6)] rounded-sm"></span> VIP</div>
-                        <div class="flex items-center gap-2"><span class="w-4 h-1 bg-pink-400 shadow-[0_-2px_6px_rgba(244,114,182,0.6)] rounded-sm"></span> Limited</div>
+                        <div class="flex items-center gap-2"><span class="w-4 h-1 bg-purple-400 shadow-[0_-2px_6px_rgba(244,114,182,0.6)] rounded-sm"></span> Limited</div>
+                        <div class="flex items-center gap-2"><span class="w-4 h-1 bg-green-500 shadow-[0_-2px_6px_rgba(34,197,94,0.6)] rounded-sm"></span> Basic Limited</div>
                         <div class="flex items-center gap-2"><span class="w-2 h-2 bg-red-500 rounded-full shadow-sm"></span> Updated</div>
                         <div class="flex items-center gap-1.5"><span class="text-green-400 font-bold text-sm">+</span><span class="text-red-400 font-bold text-sm">-</span> Sub-rank</div>
                     </div>
                 </div>
 
-                <div class="flex flex-wrap gap-1 pt-1">
-                    <button onclick="admin.setFilter('All')" id="filter-All" class="class-btn-active border rounded px-2 py-1 text-xs font-bold transition-all flex items-center gap-1 uppercase tracking-wide">
-                        <i class="fa-solid fa-layer-group text-sm"></i> All
-                    </button>
+                <div class="flex flex-wrap gap-2 pt-1 items-center">
+                    <!-- Class Buttons -->
                     <div id="classButtons" class="flex flex-wrap gap-1"></div>
+
+                    <div class="h-6 w-px bg-gray-700 mx-1"></div>
+
+                     <!-- Type Filter Dropdown -->
+                     <div class="relative z-50">
+                        <button onclick="window.admin.toggleTypeMenu()" id="typeFilterBtn" class="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white rounded px-3 py-1 text-xs font-bold transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-filter"></i>
+                        </button>
+                        <div id="typeMenu" class="hidden absolute top-full right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-xl p-2 flex flex-col gap-1">
+                            <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer text-xs text-gray-200">
+                                <input type="checkbox" checked onchange="window.admin.toggleType('VIP')" class="custom-checkbox rounded bg-gray-900 border-gray-600">
+                                <span class="text-yellow-400 font-bold">VIP</span>
+                            </label>
+                            <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer text-xs text-gray-200">
+                                <input type="checkbox" checked onchange="window.admin.toggleType('Limited')" class="custom-checkbox rounded bg-gray-900 border-gray-600">
+                                <span class="text-purple-400 font-bold">Limited</span>
+                            </label>
+                            <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer text-xs text-gray-200">
+                                <input type="checkbox" checked onchange="window.admin.toggleType('Basic Limited')" class="custom-checkbox rounded bg-gray-900 border-gray-600">
+                                <span class="text-green-400 font-bold">Basic Limited</span>
+                            </label>
+                            <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer text-xs text-gray-200">
+                                <input type="checkbox" checked onchange="window.admin.toggleType('Normal')" class="custom-checkbox rounded bg-gray-900 border-gray-600">
+                                <span class="text-gray-400 font-bold">Normal</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
+        <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow relative z-0">
             <div id="loading" class="text-center py-20 hidden">
                 <i class="fas fa-circle-notch fa-spin text-4xl text-indigo-500"></i>
                 <p class="mt-4 text-gray-400">Syncing with Google Sheets...</p>
@@ -140,31 +179,32 @@
 
             <!-- Tier List Display (Rows) -->
             <div id="tierListContainer" class="flex flex-col gap-1 select-none"></div>
-
-            <!-- Changelog Modal (Full Page) -->
-            <div id="changelogPanel" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                <div class="w-full max-w-lg bg-gray-800 rounded-lg border border-gray-700 shadow-2xl flex flex-col h-[80vh]">
-                    <div class="flex justify-between items-center p-4 border-b border-gray-700 bg-gray-900">
-                        <h3 class="text-xl font-bold text-white"><i class="fa-solid fa-history mr-2 text-indigo-400"></i> Changelog</h3>
-                        <button onclick="admin.toggleChangelog()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
-                    </div>
-                    <div id="changelogBody" class="overflow-y-auto p-4 space-y-4">
-                        <!-- Logs injected here -->
-                    </div>
-                </div>
-            </div>
         </main>
+    </div>
+
+    <!-- Changelog Modal -->
+    <!-- Moved outside appContainer main content to fix Z-Index issues -->
+    <div id="changelogPanel" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="w-full max-w-lg bg-gray-800 rounded-lg border border-gray-700 shadow-2xl flex flex-col h-[80vh]">
+            <div class="flex justify-between items-center p-4 border-b border-gray-700 bg-gray-900">
+                <h3 class="text-xl font-bold text-white"><i class="fa-solid fa-history mr-2 text-indigo-400"></i> Changelog</h3>
+                <button onclick="window.admin.toggleChangelog()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div id="changelogBody" class="overflow-y-auto p-4 space-y-4">
+                <!-- Logs injected here -->
+            </div>
+        </div>
     </div>
 
     <!-- Edit Modal -->
     <div id="heroModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="admin.closeModal()"></div>
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="window.admin.closeModal()"></div>
         <div class="fixed inset-0 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="bg-gray-800 border border-gray-700 rounded-lg shadow-2xl w-full max-w-lg p-6 relative">
                     <h3 class="text-xl font-bold mb-4" id="modalTitle">Edit Hero</h3>
                     
-                    <form id="heroForm" onsubmit="event.preventDefault(); admin.save();">
+                    <form id="heroForm" onsubmit="event.preventDefault(); window.admin.save();">
                         <input type="hidden" id="heroId">
                         
                         <div class="grid grid-cols-1 gap-4 mb-4">
@@ -173,12 +213,20 @@
                                 <input type="text" id="heroName" required class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none text-white font-bold">
                             </div>
                             <div>
-                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Image URL</label>
-                                <div class="relative">
-                                    <input type="url" id="heroImage" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none text-white pr-10">
-                                    <button type="button" onclick="admin.lookupImage()" title="Auto-find Image" class="absolute right-2 top-2 text-gray-400 hover:text-white mt-0.5">
-                                        <i class="fa-solid fa-magnifying-glass"></i>
-                                    </button>
+                                <label class="text-xs text-gray-400 uppercase font-bold block mb-1">Image URL or Upload</label>
+                                <div class="flex gap-2">
+                                    <div class="relative flex-grow">
+                                        <input type="url" id="heroImage" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 w-full focus:border-indigo-500 outline-none text-white pr-10">
+                                        <button type="button" onclick="window.admin.lookupImage()" title="Auto-find Image" class="absolute right-2 top-2 text-gray-400 hover:text-white mt-0.5">
+                                            <i class="fa-solid fa-magnifying-glass"></i>
+                                        </button>
+                                    </div>
+                                    <!-- Upload Button Trigger -->
+                                    <label class="bg-gray-700 hover:bg-gray-600 text-white rounded px-3 py-2 cursor-pointer border border-gray-600 transition-colors" title="Upload to GitHub">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="window.admin.uploadImage()">
+                                    </label>
+                                    <span id="uploadLoading" class="hidden self-center text-indigo-400"><i class="fas fa-spinner fa-spin"></i></span>
                                 </div>
                             </div>
                         </div>
@@ -198,6 +246,7 @@
                                     <option value="Normal">Normal</option>
                                     <option value="VIP">VIP</option>
                                     <option value="Limited">Limited</option>
+                                    <option value="Basic Limited">Basic Limited</option>
                                 </select>
                             </div>
                         </div>
@@ -222,9 +271,9 @@
                         </div>
 
                         <div class="flex justify-between pt-2 border-t border-gray-700">
-                            <button type="button" onclick="admin.deleteHero()" id="btnDelete" class="text-red-400 hover:text-red-300 text-sm hidden">Delete Hero</button>
+                            <button type="button" onclick="window.admin.deleteHero()" id="btnDelete" class="text-red-400 hover:text-red-300 text-sm hidden">Delete Hero</button>
                             <div class="flex gap-3 ml-auto">
-                                <button type="button" onclick="admin.closeModal()" class="px-4 py-2 bg-gray-600 rounded hover:bg-gray-500 text-white">Cancel</button>
+                                <button type="button" onclick="window.admin.closeModal()" class="px-4 py-2 bg-gray-600 rounded hover:bg-gray-500 text-white">Cancel</button>
                                 <button type="submit" id="btnSave" class="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-700 font-bold text-white shadow-lg">Save Changes</button>
                             </div>
                         </div>
@@ -235,8 +284,8 @@
     </div>
 
     <script>
-        const admin = (() => {
-            // REPLACE WITH YOUR NEW ADMIN SCRIPT URL
+        (function() {
+            // Define API URL and constants
             const API_URL = "https://script.google.com/macros/s/AKfycbyNcCFpZaPBG4vOFPCJjO7Wg3z6m0FcHwKR1tRRbvK9D5cPKY2OBpKYtnx-86mQnKSz/exec";
             
             const BASE_RANKS = ["SSS", "SS", "S", "A", "B", "C", "D", "F", "Unranked"];
@@ -263,13 +312,24 @@
             let heroes = [];
             let currentMode = 'late';
             let currentFilter = 'All';
+            let activeTypeFilters = new Set(['VIP', 'Limited', 'Basic Limited', 'Normal']);
 
+            // Define all functions first
             const init = () => {
                 const selects = document.querySelectorAll('.rank-select');
                 selects.forEach(s => s.innerHTML = RANKS.map(r => `<option value="${r}">${r}</option>`).join(''));
                 
                 renderClassButtons();
                 updateInfo();
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    const btn = document.getElementById('typeFilterBtn');
+                    const menu = document.getElementById('typeMenu');
+                    if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                });
 
                 const saved = sessionStorage.getItem('mw_admin_pass');
                 if(saved) {
@@ -278,15 +338,32 @@
                 }
             };
 
+            const toggleTypeMenu = () => {
+                document.getElementById('typeMenu').classList.toggle('hidden');
+            };
+
+            const toggleType = (type) => {
+                if (activeTypeFilters.has(type)) {
+                    activeTypeFilters.delete(type);
+                } else {
+                    activeTypeFilters.add(type);
+                }
+                render();
+            };
+
             const renderClassButtons = () => {
                 const container = document.getElementById('classButtons');
-                container.innerHTML = Object.keys(CLASS_ICONS).map(cls => `
-                    <button onclick="admin.setFilter('${cls}')" id="filter-${cls.replace(/\s+/g, '-')}" 
-                        class="class-btn-inactive border rounded px-2 py-1 text-xs font-bold transition-all flex items-center gap-1 text-gray-300 hover:text-white">
-                        <img src="${CLASS_ICONS[cls]}" class="w-4 h-4 rounded-full object-cover">
+                container.innerHTML = Object.keys(CLASS_ICONS).map(cls => {
+                    const isActive = currentFilter === cls;
+                    const btnClass = isActive ? 'class-btn-active' : 'class-btn-inactive';
+                    const iconStyle = isActive ? '' : 'opacity-70';
+                    return `
+                    <button onclick="window.admin.setFilter('${cls}')" id="filter-${cls.replace(/\s+/g, '-')}" 
+                        class="${btnClass} border rounded px-2 py-1 text-xs font-bold transition-all flex items-center gap-1 text-gray-300 hover:text-white">
+                        <img src="${CLASS_ICONS[cls]}" class="w-4 h-4 rounded-full object-cover ${iconStyle}">
                         <span class="hidden sm:inline">${cls}</span>
                     </button>
-                `).join('');
+                `}).join('');
             };
 
             const setMode = (mode) => {
@@ -312,13 +389,12 @@
             };
 
             const setFilter = (cls) => {
-                currentFilter = cls;
-                document.querySelectorAll('[id^="filter-"]').forEach(btn => {
-                    btn.classList.remove('class-btn-active');
-                    btn.classList.add('class-btn-inactive');
-                });
-                const id = cls === 'All' ? 'filter-All' : `filter-${cls.replace(/\s+/g, '-')}`;
-                document.getElementById(id)?.classList.replace('class-btn-inactive', 'class-btn-active');
+                if (currentFilter === cls) {
+                    currentFilter = 'All';
+                } else {
+                    currentFilter = cls;
+                }
+                renderClassButtons();
                 render();
             };
 
@@ -405,9 +481,13 @@
                         
                         const classMatch = currentFilter === 'All' || h.heroClass === currentFilter;
                         const searchMatch = h.name.toLowerCase().includes(filterSearch);
-                        const rankMatch = base === baseRank;
+                        
+                        const hType = h.heroType || 'Normal';
+                        let normalizedType = hType;
+                        if(normalizedType === 'Basic Banner') normalizedType = 'Basic Limited';
+                        const typeMatch = activeTypeFilters.has(normalizedType);
 
-                        return rankMatch && classMatch && searchMatch;
+                        return base === baseRank && classMatch && searchMatch && typeMatch;
                     });
 
                     if (heroesInRow.length === 0) return;
@@ -446,7 +526,7 @@
                             // Visual Divider between sub-groups
                             if (hasPrevContent) {
                                 const divider = document.createElement('div');
-                                divider.className = 'h-px bg-gray-700/40 mx-4';
+                                divider.className = 'h-px bg-gray-700/50 mx-4';
                                 contentDiv.appendChild(divider);
                             }
 
@@ -459,10 +539,11 @@
                                 let topBorderClass = 'border-t-normal';
                                 if (h.heroType === 'VIP') topBorderClass = 'border-t-vip';
                                 if (h.heroType === 'Limited') topBorderClass = 'border-t-limited';
+                                if (h.heroType === 'Basic Limited' || h.heroType === 'Basic Banner') topBorderClass = 'border-t-basic';
 
                                 // UPDATED: Match Public Site Dimensions and style EXACTLY
                                 heroEl.className = `hero-portrait relative w-16 h-24 sm:w-20 sm:h-26 bg-gray-700 cursor-pointer rounded overflow-hidden ${topBorderClass} group transition-all`;
-                                heroEl.onclick = () => openModal(h);
+                                heroEl.onclick = () => window.admin.openModal(h);
                                 
                                 // Class Icon
                                 const classIconUrl = CLASS_ICONS[h.heroClass] || 'https://placehold.co/32?text=?';
@@ -484,7 +565,7 @@
 
                                 heroEl.innerHTML = `
                                     ${classIconHtml}${dotHtml}${subRankHtml}
-                                    <img src="${h.image}" onerror="this.src='https://placehold.co/100?text=?'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <img src="${h.image}" onerror="this.src='https://placehold.co/100/4E4F5C/FFFFFF?text=?'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
                                     <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent pt-3 pb-0.5 px-1 flex flex-col justify-end">
                                         <div class="text-[9px] sm:text-[10px] text-center text-gray-100 leading-none font-bold break-words drop-shadow-md pb-0.5">${h.name}</div>
                                     </div>
@@ -534,6 +615,7 @@
             const save = async () => {
                 const btn = document.getElementById('btnSave');
                 btn.innerText = "Saving..."; btn.disabled = true;
+                
                 const formData = {
                     id: document.getElementById('heroId').value,
                     name: document.getElementById('heroName').value,
@@ -544,59 +626,77 @@
                     notes: document.getElementById('heroNotes').value,
                     early: document.getElementById('rankEarly').value,
                     late: document.getElementById('rankLate').value,
-                    sacrament: document.getElementById('rankSacr').value
+                    sacrament: document.getElementById('rankSacr').value,
+                    lastUpdate: new Date().toISOString()
                 };
-                await sendRequest({ action: "save", data: formData });
-                await refreshData();
+
+                const existingIndex = heroes.findIndex(h => h.id == formData.id);
+                if (existingIndex >= 0) {
+                    heroes[existingIndex] = { ...heroes[existingIndex], ...formData };
+                } else {
+                    formData.id = formData.id || "temp_" + Date.now();
+                    heroes.push(formData);
+                }
+                render();
                 closeModal();
-                btn.innerText = "Save Changes"; btn.disabled = false;
+
+                try {
+                    const res = await sendRequest({ action: "save", data: formData });
+                    if(formData.id.startsWith("temp_") && res.id) {
+                        const idx = heroes.findIndex(h => h.id === formData.id);
+                        if(idx !== -1) heroes[idx].id = res.id;
+                    }
+                } catch(e) {
+                    alert("Save failed! Reverting.");
+                    await refreshData();
+                } finally {
+                    btn.innerText = "Save Changes"; btn.disabled = false;
+                }
             };
 
             const deleteHero = async () => {
                 if(!confirm("Delete this hero?")) return;
-                await sendRequest({ action: "delete", id: document.getElementById('heroId').value });
-                await refreshData(); closeModal();
+                const id = document.getElementById('heroId').value;
+                const oldHeroes = [...heroes];
+                heroes = heroes.filter(h => h.id != id);
+                render();
+                closeModal();
+
+                try {
+                    await sendRequest({ action: "delete", id: id });
+                } catch(e) {
+                    alert("Delete failed! Reverting.");
+                    heroes = oldHeroes;
+                    render();
+                }
             };
             
-            const toggleChangelog = async () => {
-                const panel = document.getElementById('changelogPanel');
-                if (panel.classList.contains('hidden')) {
-                    panel.classList.remove('hidden');
-                    document.getElementById('changelogBody').innerHTML = '<div class="text-center text-gray-500 py-10"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading logs...</div>';
-                    
-                    const res = await sendRequest({ action: "get_logs" });
-                    const logs = res || [];
-                    
-                    if (logs.length === 0) {
-                        document.getElementById('changelogBody').innerHTML = '<div class="text-center text-gray-500 py-10">No logs found.</div>';
-                        return;
+            const uploadImage = async () => {
+                const input = document.getElementById('fileInput');
+                const file = input.files[0];
+                if(!file) return;
+
+                // Client-side visual feedback
+                document.getElementById('uploadLoading').classList.remove('hidden');
+                
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = async function () {
+                    const base64Content = reader.result.split(',')[1];
+                    try {
+                        const res = await sendRequest({ 
+                            action: "upload_image", 
+                            fileData: base64Content,
+                            fileName: file.name
+                        });
+                        document.getElementById('heroImage').value = res.url;
+                        input.value = ""; // Clear input
+                    } catch(e) {
+                        alert("Upload failed: " + e.message);
+                    } finally {
+                        document.getElementById('uploadLoading').classList.add('hidden');
                     }
-
-                    const grouped = {};
-                    logs.forEach(log => {
-                        let dateStr = "Unknown";
-                        try { dateStr = new Date(log.timestamp).toLocaleDateString(undefined, {month:'short', day:'numeric'}); } catch(e) { dateStr = log.timestamp; }
-                        if (!grouped[dateStr]) grouped[dateStr] = [];
-                        grouped[dateStr].push(log);
-                    });
-
-                    document.getElementById('changelogBody').innerHTML = Object.keys(grouped).map(date => `
-                        <div class="mb-6">
-                            <h4 class="text-indigo-400 font-bold text-sm mb-2 border-b border-gray-700 pb-1">${date}</h4>
-                            <div class="space-y-2">
-                                ${grouped[date].map(l => `
-                                    <div class="bg-gray-700/30 p-2 rounded text-xs flex gap-2">
-                                        <span class="font-bold w-16 ${l.action==='CREATE'?'text-green-400':l.action==='DELETE'?'text-red-400':'text-blue-400'}">${l.action}</span>
-                                        <span class="text-gray-300 break-words flex-1 whitespace-pre-wrap">${l.details}</span>
-                                        <span class="text-gray-500 text-[10px] w-12 text-right">${new Date(l.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    panel.classList.add('hidden');
-                }
+                };
             };
             
             const lookupImage = async () => {
@@ -621,7 +721,7 @@
                     const data = await res.json();
                     if(data.error) throw new Error(data.error);
                     return data;
-                } catch(e) { alert("Error: " + e.message); }
+                } catch(e) { throw e; }
             };
             
             const refreshData = async () => {
@@ -630,10 +730,56 @@
                 render();
             };
 
-            return { init, setMode, login, openModal, closeModal, save, deleteHero, render, toggleChangelog, lookupImage, setFilter };
+            const toggleChangelog = async () => {
+                const panel = document.getElementById('changelogPanel');
+                if (panel.classList.contains('hidden')) {
+                    panel.classList.remove('hidden');
+                    document.getElementById('changelogBody').innerHTML = '<div class="text-center text-gray-500 py-10"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading logs...</div>';
+                    
+                    try {
+                        const res = await sendRequest({ action: "get_logs" });
+                        const logs = res || [];
+                        
+                        if (logs.length === 0) {
+                            document.getElementById('changelogBody').innerHTML = '<div class="text-center text-gray-500 py-10">No logs found.</div>';
+                            return;
+                        }
+
+                        const grouped = {};
+                        logs.forEach(log => {
+                            let dateStr = "Unknown";
+                            try { dateStr = new Date(log.timestamp).toLocaleDateString(undefined, {month:'short', day:'numeric'}); } catch(e) { dateStr = log.timestamp; }
+                            if (!grouped[dateStr]) grouped[dateStr] = [];
+                            grouped[dateStr].push(log);
+                        });
+
+                        document.getElementById('changelogBody').innerHTML = Object.keys(grouped).map(date => `
+                            <div class="mb-6">
+                                <h4 class="text-indigo-400 font-bold text-sm mb-2 border-b border-gray-700 pb-1">${date}</h4>
+                                <div class="space-y-2">
+                                    ${grouped[date].map(l => `
+                                        <div class="bg-gray-700/30 p-2 rounded text-xs flex gap-2">
+                                            <span class="font-bold w-16 ${l.action==='CREATE'?'text-green-400':l.action==='DELETE'?'text-red-400':'text-blue-400'}">${l.action}</span>
+                                            <span class="text-gray-300 break-words flex-1 whitespace-pre-wrap">${l.details}</span>
+                                            <span class="text-gray-500 text-[10px] w-12 text-right">${new Date(l.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('');
+                    } catch(e) {
+                        document.getElementById('changelogBody').innerHTML = `<div class="text-center text-red-400 py-10">Error: ${e.message}</div>`;
+                    }
+                } else {
+                    panel.classList.add('hidden');
+                }
+            };
+
+            // Expose public methods to window.admin
+            window.admin = { init, setMode, login, openModal, closeModal, save, deleteHero, render, toggleChangelog, lookupImage, setFilter, toggleTypeMenu, toggleType, uploadImage };
         })();
 
-        window.onload = admin.init;
+        window.onload = window.admin.init;
     </script>
 </body>
 </html>
